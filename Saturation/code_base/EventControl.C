@@ -1,0 +1,98 @@
+#define EventControl_cxx
+#include "EventControl.h"
+#include <TH2.h>
+#include <TStyle.h>
+#include <TCanvas.h>
+#include <iostream>
+
+void EventControl::Loop()
+{
+//   In a ROOT session, you can do:
+//      root> .L EventControl.C
+//      root> EventControl t
+//      root> t.GetEntry(12); // Fill t data members with entry number 12
+//      root> t.Show();       // Show values of entry 12
+//      root> t.Show(16);     // Read and show values of entry 16
+//      root> t.Loop();       // Loop on all entries
+//
+
+//     This is the loop skeleton where:
+//    jentry is the global entry number in the chain
+//    ientry is the entry number in the current Tree
+//  Note that the argument to GetEntry must be:
+//    jentry for TChain::GetEntry
+//    ientry for TTree::GetEntry and TBranch::GetEntry
+//
+//       To read only selected branches, Insert statements like:
+// METHOD1:
+//    fChain->SetBranchStatus("*",0);  // disable all branches
+//    fChain->SetBranchStatus("branchname",1);  // activate branchname
+// METHOD2: replace line
+//    fChain->GetEntry(jentry);       //read all branches
+//by  b_branchname->GetEntry(ientry); //read only this branch
+   if (fChain == 0) return;
+
+
+   TH2F * h_energy = new TH2F("h_energy",";x;y",32,-90,90,32,-90,90);
+   TH2F * h_energy_cut = new TH2F("h_energy_cut",";x;y",32,-90,90,32,-90,90);
+   float total_energy = 0;
+   float mean_MIP; 
+   float total_MIP = 0; 
+   float dIdt;
+   float I_MIP = 4.2e-7;
+   float c = 3e8;
+   float thickness = 500e-6;
+   float t = thickness / c; 
+
+   Long64_t nentries = fChain->GetEntriesFast();
+
+   Long64_t nbytes = 0, nb = 0;
+   
+   for (Long64_t jentry=0; jentry<nentries;jentry++) {
+      Long64_t ientry = LoadTree(jentry);
+      if (ientry < 0) break;
+      nb = fChain->GetEntry(jentry);   nbytes += nb;
+      // if (Cut(ientry) < 0) continue;
+
+      for (int ihit=0; ihit < nhit_len; ihit++){
+
+        if (hit_slab[ihit] == 5){
+
+         if (hit_chip[ihit] == 14){
+
+            if (hit_chan[ihit] == 8){
+
+               if ( hit_energy[ihit] > 1.0 ){
+                  total_energy += hit_energy[ihit];
+                  total_MIP++;  
+                  h_energy_cut->Fill(hit_x[ihit],hit_y[ihit]);
+               
+               }
+            }
+         }
+         else {   
+            h_energy->Fill(hit_x[ihit],hit_y[ihit]);
+
+         } 
+      }
+   }
+   mean_MIP = total_energy / total_MIP;
+   dIdt= mean_MIP * I_MIP / t ;
+   
+   
+   }
+   // end of entries
+    cout << "Nombre total de triggers : " << total_MIP << endl;
+    cout << "Energie totale deposee : " << total_energy << endl;
+    cout << "Energie moyenne d'un trigger : " << mean_MIP << endl;  
+    cout << "Intensite moyenne d'un trigger : " << mean_MIP * I_MIP  << "A"<< endl;
+    cout << "dI/dt = " << dIdt << endl;   
+   TFile * file = new TFile("energy_test.root","RECREATE");
+   file->cd();
+
+   h_energy->Write();
+   h_energy_cut->Write();
+
+
+   
+}
