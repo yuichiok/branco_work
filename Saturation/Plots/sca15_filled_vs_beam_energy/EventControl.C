@@ -66,7 +66,7 @@ float EventControl::Count_Event()
 
    float scale = static_cast<float>(cnt) / static_cast<float>(total_hits);
    cout << "scale = " << scale << endl;
-   return static_cast<float>(cnt);
+   return static_cast<float>(scale);
    // return scale;
    
 } // event loop
