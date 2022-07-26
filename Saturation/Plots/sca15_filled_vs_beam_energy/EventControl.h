@@ -36,21 +36,21 @@ public :
    Int_t           nhit_len;
    Float_t         sum_energy;
    Float_t         sum_energy_lg;
-   Int_t           hit_slab[1453];   //[nhit_len]
-   Int_t           hit_chip[1453];   //[nhit_len]
-   Int_t           hit_chan[1453];   //[nhit_len]
-   Int_t           hit_sca[1453];   //[nhit_len]
-   Float_t         hit_x[1453];   //[nhit_len]
-   Float_t         hit_y[1453];   //[nhit_len]
-   Float_t         hit_z[1453];   //[nhit_len]
-   Int_t           hit_adc_high[1453];   //[nhit_len]
-   Int_t           hit_adc_low[1453];   //[nhit_len]
-   Float_t         hit_energy[1453];   //[nhit_len]
-   Float_t         hit_energy_lg[1453];   //[nhit_len]
-   Int_t           hit_n_scas_filled[1453];   //[nhit_len]
-   Int_t           hit_isHit[1453];   //[nhit_len]
-   Int_t           hit_isMasked[1453];   //[nhit_len]
-   Int_t           hit_isCommissioned[1453];   //[nhit_len]
+   Int_t           hit_slab[9999];   //[nhit_len]
+   Int_t           hit_chip[9999];   //[nhit_len]
+   Int_t           hit_chan[9999];   //[nhit_len]
+   Int_t           hit_sca[9999];   //[nhit_len]
+   Float_t         hit_x[9999];   //[nhit_len]
+   Float_t         hit_y[9999];   //[nhit_len]
+   Float_t         hit_z[9999];   //[nhit_len]
+   Int_t           hit_adc_high[9999];   //[nhit_len]
+   Int_t           hit_adc_low[9999];   //[nhit_len]
+   Float_t         hit_energy[9999];   //[nhit_len]
+   Float_t         hit_energy_lg[9999];   //[nhit_len]
+   Int_t           hit_n_scas_filled[9999];   //[nhit_len]
+   Int_t           hit_isHit[9999];   //[nhit_len]
+   Int_t           hit_isMasked[9999];   //[nhit_len]
+   Int_t           hit_isCommissioned[9999];   //[nhit_len]
 
    // List of branches
    TBranch        *b_event;   //!
@@ -103,9 +103,9 @@ EventControl::EventControl(TTree *tree) : fChain(0)
 // if parameter tree is not specified (or zero), connect the file
 // used to generate this class and read the Tree.
    if (tree == 0) {
-      TFile *f = (TFile*)gROOT->GetListOfFiles()->FindObject("/home/irles/Work/Saturation/Runs/100GeV.root");
+      TFile *f = (TFile*)gROOT->GetListOfFiles()->FindObject("../../Runs/100GeV.root");
       if (!f || !f->IsOpen()) {
-         f = new TFile("/home/irles/Work/Saturation/Runs/100GeV.root");
+         f = new TFile("../../Runs/100GeV.root");
       }
       f->GetObject("ecal",tree);
 
@@ -119,9 +119,9 @@ EventControl::EventControl(TString filename) : fChain(0)
 // used to generate this class and read the Tree.
    TTree *tree = 0;
    if (filename == "default") {
-      TFile *f = (TFile*)gROOT->GetListOfFiles()->FindObject("/home/irles/Work/Saturation/Runs/100GeV.root");
+      TFile *f = (TFile*)gROOT->GetListOfFiles()->FindObject("../../Runs/100GeV.root");
       if (!f || !f->IsOpen()) {
-         f = new TFile("/home/irles/Work/Saturation/Runs/100GeV.root");
+         f = new TFile("../../Runs/100GeV.root");
       }
       f->GetObject("ecal",tree);
    }else{
