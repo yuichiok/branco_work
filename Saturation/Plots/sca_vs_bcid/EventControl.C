@@ -38,10 +38,9 @@ void EventControl::Loop()
    TH2F * chip_sca[4];
    for (int ih = 0; ih < 4; ih++)
    {
-      TString hname = "chip_sca" + to_string(ih+12);
-      chip_sca[ih] = new TH2F(hname,hname,30000,0,30000,15,0,15);
+      TString hname = "sca_chip" + to_string(ih+12) + "vs number of event";
+      chip_sca[ih] = new TH2F(hname,";number of event;sca",30000,0,30000,15,0,15);
    }
-   cout << "test1"; 
 
    int nhit5[15];
 
@@ -57,7 +56,10 @@ void EventControl::Loop()
       nb = fChain->GetEntry(jentry);   nbytes += nb;
       // if (Cut(ientry) < 0) continue;
 
-      
+      if (nhit_slab > 13 && jentry < 30000){
+         cout << jentry << endl;
+      }
+
           for(int ichip = 0; ichip < 5; ichip++){
             for (int ihit=0; ihit < nhit_len; ihit++){
                int true_chip= ichip+12;
