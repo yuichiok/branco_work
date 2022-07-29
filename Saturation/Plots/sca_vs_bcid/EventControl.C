@@ -44,6 +44,10 @@ void EventControl::Loop()
       chip_sca[ih] = new TH2F(hname,";number of event;sca",30000,0,30000,15,0,15);
    }
 
+   TH1F * h_sum_energy = new TH1F("h_sum_energy","; sum_energy; Entries",500,0,1.5E4);
+   TH1F * h_hit_sum_energy = new TH1F("h_hit_sum_energy","; sum_energy; Entries",500,0,1.5E4);
+
+
    int nhit5[15];
 
 
@@ -56,52 +60,88 @@ void EventControl::Loop()
       Long64_t ientry = LoadTree(jentry);
       if (ientry < 0) break;
       nb = fChain->GetEntry(jentry);   nbytes += nb;
-      // if (Cut(ientry) < 0) continue;
 
       if (nhit_slab > 13){
-         
-          for(int ichip = 0; ichip < 5; ichip++){
 
-            list<int> sca_list;
+         list<int> sca_list[15][4];
+
+         for (int ihit=0; ihit < nhit_len; ihit++){
+
+            if(!hit_isHit[ihit]) continue;
+
+            for(int islab = 0; islab < 15; islab++){
+
+               for (int ichip=0; ichip < 4; ichip++){
+
+                  int true_chip= ichip+12;
+
+                  if (hit_slab[ihit] == islab && hit_chip[ihit] == true_chip ){
+
+                     sca_list[islab][ichip].push_back(hit_sca[ihit]);   
+
+                  }// end if slab
+
+               }//end if chip
+
+            } // end if slab
+
+         } // end for ihit
+
+         bool check_dup = false;
+         for(int islab=0; islab<15; islab++){
+            for(int ichip=0; ichip<4; ichip++){
+               
+               if(!sca_list[islab][ichip].empty()){
+
+                  sca_list[islab][ichip].sort();
+                  sca_list[islab][ichip].unique();
+
+                  int range_sca = sca_list[islab][ichip].size();
+                  if(4 == range_sca) check_dup=true;
+
+               }
+            }
+         }
+
+         if(check_dup){
+
+            h_sum_energy->Fill(sum_energy);
+            
+            float hit_sum_energy = 0;
 
             for (int ihit=0; ihit < nhit_len; ihit++){
+               
+               if(hit_energy[ihit]>1.0){
+                  hit_sum_energy += hit_energy[ihit];
+               }
+               
+               for(int ichip = 0; ichip < 5; ichip++){
 
-               int true_chip= ichip+12;
+                  int true_chip= ichip+12;
 
-               if (hit_slab[ihit] == 7 && hit_chip[ihit] == true_chip ){
+                  if (hit_chip[ihit] == true_chip){      
+               
+                     chip_sca[ichip]->Fill(jentry, hit_sca[ihit]);    
 
-                  sca_list.push_back(hit_sca[ihit]);         
-              
-                          // chip_sca[ichip]->Fill(jentry, hit_sca[ihit]);                       
                   }//end if  hit slab
-            } // end for ihit
 
-            sca_list.sort();
-            sca_list.unique();
+               } // end for ichip
+
+            } // end for hit
+
+            h_hit_sum_energy->Fill(hit_sum_energy);
+
+         }else{ // checked duplicate
+
+
+         }
+
             
-            int range_sca;
-            range_sca = sca_list.size();
-
-            // cout << range_sca << endl;
-
-            if (range_sca > 1){
-               bad_event.push_back(jentry);
-            }
-         //   for (auto it = sca_list.begin(); it != sca_list.end(); ++it){
-         //    cout << *it << endl;   
-         //    // cout << " end ichip"<< endl;
-            }
-              
-            
-         } // end for ichip
-   bad_event.sort();
-   bad_event.unique();      
+      } // end for slab coincidence
    
    } // event loop
    
-   TH1F * h_sum_energy = new TH1F("h_sum_energy","; sum_energy; Entries",500,0,1.5E4);
-   TH1F * h_hit_sum_energy = new TH1F("h_hit_sum_energy","; sum_energy; Entries",500,0,1.5E4);
-
+/*
    int ibad =0;
    for (Long64_t jentry=0; jentry<nentries;jentry++) {
       Long64_t ientry = LoadTree(jentry);
@@ -147,11 +187,13 @@ void EventControl::Loop()
          }
       }
    } // end of entries
+*/
+
    for(int ih=0; ih < 4; ih++ ){
          c0->cd(ih+1);
          chip_sca[ih]->Draw("h");
    }
-   
+
    
    
    TFile * file = new TFile("sca_bcid_electrons_" + TString(to_string(use_energy)) + "GeV.root","RECREATE");
