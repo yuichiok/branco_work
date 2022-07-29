@@ -4,9 +4,13 @@
 
 #include "EventControl.C"
 
-void run(){
+void run(int energy=10){
 
-	EventControl EventControl;
+	TString filepath = "../../Runs/";
+	TString filename = to_string(energy) + "GeV.root";
+	TString fullfile = filepath + filename;
+
+	EventControl EventControl(energy, fullfile);
 	EventControl.Loop();
 
 	ROOT::Math::MinimizerOptions::SetDefaultMaxFunctionCalls( 200 );

@@ -83,6 +83,7 @@ public :
    TBranch        *b_hit_isMasked;   //!
    TBranch        *b_hit_isCommissioned;   //!
 
+   EventControl(int ene, TString filein_s);
    EventControl(TTree *tree=0);
    virtual ~EventControl();
    virtual Int_t    Cut(Long64_t entry);
@@ -92,19 +93,31 @@ public :
    virtual void     Loop();
    virtual Bool_t   Notify();
    virtual void     Show(Long64_t entry = -1);
+
+   int use_energy = 10;
 };
 
 #endif
 
 #ifdef EventControl_cxx
+
+EventControl::EventControl(int ene, TString filein_s) : fChain(0) 
+{
+   if(!filein_s) cout << "Error: no file entry" << endl;
+   TFile *f = new TFile(filein_s);
+   TTree *tree = (TTree*)f->Get("ecal");
+   Init(tree);
+   use_energy = ene;
+}
+
 EventControl::EventControl(TTree *tree) : fChain(0) 
 {
 // if parameter tree is not specified (or zero), connect the file
 // used to generate this class and read the Tree.
    if (tree == 0) {
-      TFile *f = (TFile*)gROOT->GetListOfFiles()->FindObject("/home/irles/Work/Saturation/Runs/80GeV.root");
+      TFile *f = (TFile*)gROOT->GetListOfFiles()->FindObject("../../Runs/20GeV.root");
       if (!f || !f->IsOpen()) {
-         f = new TFile("/home/irles/Work/Saturation/Runs/80GeV.root");
+         f = new TFile("../../Runs/20GeV.root");
       }
       f->GetObject("ecal",tree);
 

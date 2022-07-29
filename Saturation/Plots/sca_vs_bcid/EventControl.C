@@ -99,6 +99,9 @@ void EventControl::Loop()
    
    } // event loop
    
+   TH1F * h_sum_energy = new TH1F("h_sum_energy","; sum_energy; Entries",500,0,1.5E4);
+   TH1F * h_hit_sum_energy = new TH1F("h_hit_sum_energy","; sum_energy; Entries",500,0,1.5E4);
+
    int ibad =0;
    for (Long64_t jentry=0; jentry<nentries;jentry++) {
       Long64_t ientry = LoadTree(jentry);
@@ -112,44 +115,51 @@ void EventControl::Loop()
       if (jentry == *bad_entry){
          
          ibad++;
-      }
-      else if (jentry != *bad_entry){
-       if (nhit_slab > 13){
+      } else if (jentry != *bad_entry){
          
-          for(int ichip = 0; ichip < 5; ichip++){
+         if (nhit_slab > 13){
 
-            list<int> sca_list;
+            h_sum_energy->Fill(sum_energy);
+            
+            float hit_sum_energy = 0;
 
             for (int ihit=0; ihit < nhit_len; ihit++){
+               
+               if(hit_energy[ihit]>1.0){
+                  hit_sum_energy += hit_energy[ihit];
+               }
+               
+               for(int ichip = 0; ichip < 5; ichip++){
 
-               int true_chip= ichip+12;
+                  int true_chip= ichip+12;
 
-               if (hit_slab[ihit] == 7 && hit_chip[ihit] == true_chip ){      
-              
-                  chip_sca[ichip]->Fill(jentry, hit_sca[ihit]);    
+                  if (hit_chip[ihit] == true_chip){      
+               
+                     chip_sca[ichip]->Fill(jentry, hit_sca[ihit]);    
 
-                  }//end if  hit slab
-            } // end for ihit
-   // for (auto it = bad_event.begin(); it != bad_event.end(); ++it){
-   //    cout << *it << endl;   
-         } 
+                     }//end if  hit slab
+               } // end for ichip
+
+            } // end for hit
+
+            h_hit_sum_energy->Fill(hit_sum_energy);
+
+         }
       }
-   }
-   }
+   } // end of entries
    for(int ih=0; ih < 4; ih++ ){
          c0->cd(ih+1);
          chip_sca[ih]->Draw("h");
    }
    
    
-   // end of entries
-   TFile * file = new TFile("sca_bcid_electrons_10Gev.root","RECREATE");
+   
+   TFile * file = new TFile("sca_bcid_electrons_" + TString(to_string(use_energy)) + "GeV.root","RECREATE");
    file->cd();
 
-//   layer_energy->Write();
-//   layer_hit->Write(); 
-//   myenergy->Write();
    c0->Write();
+   h_sum_energy->Write();
+   h_hit_sum_energy->Write();
 
 
-   }
+} 
