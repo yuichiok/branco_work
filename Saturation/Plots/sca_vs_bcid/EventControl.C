@@ -5,6 +5,8 @@
 #include <TCanvas.h>
 #include <iostream>
 #include <string>
+#include <list>
+#include <iterator>
 
 void EventControl::Loop()
 {
@@ -49,32 +51,91 @@ void EventControl::Loop()
 
    Long64_t nbytes = 0, nb = 0;
    int count13=0;
-      
+   list<int> bad_event;  
    for (Long64_t jentry=0; jentry<nentries;jentry++) {
       Long64_t ientry = LoadTree(jentry);
       if (ientry < 0) break;
       nb = fChain->GetEntry(jentry);   nbytes += nb;
       // if (Cut(ientry) < 0) continue;
 
-      if (nhit_slab > 13 && jentry < 30000){
-         cout << jentry << endl;
-      }
-
+      if (nhit_slab > 13){
+         
           for(int ichip = 0; ichip < 5; ichip++){
+
+            list<int> sca_list;
+
             for (int ihit=0; ihit < nhit_len; ihit++){
+
                int true_chip= ichip+12;
+
                if (hit_slab[ihit] == 7 && hit_chip[ihit] == true_chip ){
-                           chip_sca[ichip]->Fill(jentry, hit_sca[ihit]);                       
+
+                  sca_list.push_back(hit_sca[ihit]);         
+              
+                          // chip_sca[ichip]->Fill(jentry, hit_sca[ihit]);                       
                   }//end if  hit slab
             } // end for ihit
 
+            sca_list.sort();
+            sca_list.unique();
             
+            int range_sca;
+            range_sca = sca_list.size();
 
+            // cout << range_sca << endl;
+
+            if (range_sca > 1){
+               bad_event.push_back(jentry);
+            }
+         //   for (auto it = sca_list.begin(); it != sca_list.end(); ++it){
+         //    cout << *it << endl;   
+         //    // cout << " end ichip"<< endl;
+            }
+              
+            
          } // end for ichip
-       
+   bad_event.sort();
+   bad_event.unique();      
    
    } // event loop
+   
+   int ibad =0;
+   for (Long64_t jentry=0; jentry<nentries;jentry++) {
+      Long64_t ientry = LoadTree(jentry);
+      if (ientry < 0) break;
+      nb = fChain->GetEntry(jentry);   nbytes += nb;
+      // if (Cut(ientry) < 0) continue;
+      auto bad_entry = bad_event.begin();
+      
+      advance(bad_entry, ibad);
+      // cout << *bad_entry << endl;
+      if (jentry == *bad_entry){
+         
+         ibad++;
+      }
+      else if (jentry != *bad_entry){
+       if (nhit_slab > 13){
+         
+          for(int ichip = 0; ichip < 5; ichip++){
 
+            list<int> sca_list;
+
+            for (int ihit=0; ihit < nhit_len; ihit++){
+
+               int true_chip= ichip+12;
+
+               if (hit_slab[ihit] == 7 && hit_chip[ihit] == true_chip ){      
+              
+                  chip_sca[ichip]->Fill(jentry, hit_sca[ihit]);    
+
+                  }//end if  hit slab
+            } // end for ihit
+   // for (auto it = bad_event.begin(); it != bad_event.end(); ++it){
+   //    cout << *it << endl;   
+         } 
+      }
+   }
+   }
    for(int ih=0; ih < 4; ih++ ){
          c0->cd(ih+1);
          chip_sca[ih]->Draw("h");
@@ -90,5 +151,5 @@ void EventControl::Loop()
 //   myenergy->Write();
    c0->Write();
 
-   
-}
+
+   }
